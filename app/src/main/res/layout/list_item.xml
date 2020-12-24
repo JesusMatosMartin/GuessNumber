@@ -17,8 +17,8 @@
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:contentDescription="@string/ranking"
-            tools:srcCompat="@tools:sample/avatars" />
+            android:contentDescription="Ranking"
+            tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
         <Space
             android:layout_width="wrap_content"

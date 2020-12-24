@@ -1,11 +1,16 @@
 package com.example.guessnumber;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +18,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     //Variables
@@ -97,37 +106,100 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //////////////////////////////////////////////////
+    String currentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,
+                ".jpg",
+                storageDir
+        );
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    @SuppressLint("QueryPermissionsNeeded")
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, 1);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            Intent intent = new Intent(MainActivity.this, Ranking.class);
+            ranking.add(new User(name, tries, getLatestPhoto()));
+            startActivity(intent);
+        }
+    }
+    private Uri getLatestPhoto() {
+        File f = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (f.exists()) {
+            if (f.listFiles() != null) {
+                return FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", f.listFiles()[f.listFiles().length - 1]);
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+    ////////////////////////////////////////////////
+
     public void getNameByDialog() {
+        final EditText userName = new EditText(this);
+
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
         alert.setTitle("Añadir usuario al ranking");
         alert.setMessage("Introduzca su usuario:");
-
-        final EditText userName = new EditText(this);
         alert.setView(userName);
-
-        alert.setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 boolean match = false;
                 name = userName.getText().toString();
-                Intent intent = new Intent(MainActivity.this, Ranking.class);
+                Log.v("DEBUG", "Name is: " + name);
+                if (name.isEmpty()) {
+                    name = "player";
+                }
+                Log.v("DEBUG", "New name is: " + name);
                 if (!ranking.isEmpty()) {
-                    for (User bRanking : ranking) {
-                        if (bRanking.getName().equalsIgnoreCase(name)) {
-                            bRanking.setAttempts(tries);
+                    for (User r : ranking) {
+                        if (r.getName().equalsIgnoreCase(name)) {
+                            r.setAttempts(tries);
                             match = true;
                             break;
                         }
                     }
                 }
                 if (!match) {
-                    ranking.add(new User(name, tries));
+                    dispatchTakePictureIntent();
                 }
-                Log.v("DEBUG", "antes del ranking");
-                startActivity(intent);
+
             }
         });
-        alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Close
