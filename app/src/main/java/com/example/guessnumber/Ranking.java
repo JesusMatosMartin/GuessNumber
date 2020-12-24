@@ -31,7 +31,7 @@ public class Ranking extends AppCompatActivity {
                 }
                 ((TextView) cv.findViewById(R.id.name)).setText(getItem(pos).getName());
                 ((TextView) cv.findViewById(R.id.attempts)).setText("Intentos: " + String.valueOf(getItem(pos).getAttempts()));
-                ((ImageView) cv.findViewById(R.id.imageView)).setImageURI(getItem(pos).getFileUri());
+                ((ImageView) cv.findViewById(R.id.iv_avatar)).setImageURI(getItem(pos).getFileUri());
                 return cv;
             }
         };

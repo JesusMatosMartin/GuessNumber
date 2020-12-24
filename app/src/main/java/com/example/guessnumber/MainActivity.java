@@ -106,8 +106,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //////////////////////////////////////////////////
-    String currentPhotoPath;
+    String photoPath;
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -119,23 +118,19 @@ public class MainActivity extends AppCompatActivity {
                 ".jpg",
                 storageDir
         );
-        currentPhotoPath = image.getAbsolutePath();
+        photoPath = image.getAbsolutePath();
         return image;
     }
 
     @SuppressLint("QueryPermissionsNeeded")
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
             File photoFile = null;
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
-                // Error occurred while creating the File
             }
-            // Continue only if the File was successfully created
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
@@ -164,13 +159,11 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
-    ////////////////////////////////////////////////
 
     public void getNameByDialog() {
         final EditText userName = new EditText(this);
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
         alert.setTitle("Añadir usuario al ranking");
         alert.setMessage("Introduzca su usuario:");
         alert.setView(userName);
